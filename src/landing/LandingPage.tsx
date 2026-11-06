@@ -19,15 +19,15 @@ export function LandingPage({
 }: LandingPageProps) {
   const [sandboxLog, setSandboxLog] = useState<Array<{ title: string; detail: string; status: string; time: string }>>([
     {
-      title: 'System Ready',
-      detail: 'All sensors online, seats balanced, and truth-checker watching for bad data.',
-      status: 'READY',
+      title: 'Kernel Initialized',
+      detail: 'Sensors nominal, whole-party constraints locked, Anti-LWW arbitration vector active.',
+      status: 'VERIFIED',
       time: 'Just now'
     }
   ]);
   const [injecting, setInjecting] = useState(false);
 
-  const triggerTelemetrySimulation = async (scenario: string, label: string, friendlyExplanation: string) => {
+  const triggerTelemetrySimulation = async (scenario: string, label: string, explanation: string) => {
     setInjecting(true);
     try {
       const res = await fetch('/api/telemetry/simulate', {
@@ -37,12 +37,12 @@ export function LandingPage({
       });
       const data = await res.json();
       const first = data.results?.[0];
-      const statusLabel = first?.validation_status === 'VALID' ? 'CHECK PASSED' : first?.validation_status || 'BLOCKED';
+      const statusLabel = first?.validation_status === 'VALID' ? 'SIGNAL NOMINAL' : first?.validation_status || 'REJECTED';
       
       setSandboxLog(prev => [
         {
           title: label,
-          detail: friendlyExplanation + (first?.notes ? ` (${first.notes})` : ''),
+          detail: explanation + (first?.notes ? ` [${first.notes}]` : ''),
           status: statusLabel,
           time: new Date().toLocaleTimeString()
         },
@@ -52,8 +52,8 @@ export function LandingPage({
       setSandboxLog(prev => [
         {
           title: label,
-          detail: friendlyExplanation,
-          status: 'TESTED',
+          detail: explanation,
+          status: 'SIMULATED',
           time: new Date().toLocaleTimeString()
         },
         ...prev.slice(0, 5)
@@ -63,7 +63,7 @@ export function LandingPage({
     }
   };
 
-  const triggerConflictSimulation = async (scenario: string, label: string, friendlyExplanation: string) => {
+  const triggerConflictSimulation = async (scenario: string, label: string, explanation: string) => {
     setInjecting(true);
     try {
       const res = await fetch('/api/conflicts/simulate', {
@@ -73,12 +73,12 @@ export function LandingPage({
       });
       const data = await res.json();
       const resData = data.result;
-      const statusLabel = resData?.resolution_status || 'RESOLVED';
+      const statusLabel = resData?.resolution_status || 'ARBITRATED';
       
       setSandboxLog(prev => [
         {
           title: label,
-          detail: friendlyExplanation + ` -> Decision: ${resData?.winner_source || 'Safe Hold Activated'}`,
+          detail: explanation + ` -> Selected Source: ${resData?.winner_source || 'Quarantine Enforced'}`,
           status: statusLabel,
           time: new Date().toLocaleTimeString()
         },
@@ -88,8 +88,8 @@ export function LandingPage({
       setSandboxLog(prev => [
         {
           title: label,
-          detail: friendlyExplanation,
-          status: 'TESTED',
+          detail: explanation,
+          status: 'SIMULATED',
           time: new Date().toLocaleTimeString()
         },
         ...prev.slice(0, 5)
@@ -101,22 +101,23 @@ export function LandingPage({
 
   return (
     <div className="landing-layout">
-      {/* Top Bar - Clean and direct without the v2.0 supabase block */}
+      {/* Sleek Top Navigation Bar */}
       <header className="landing-top-bar">
         <div className="landing-brand">
           <span className="brand-dot" />
           <span className="brand-name">THE STRANDED NETWORK</span>
+          <span className="brand-tag">DISRUPTION COMMAND</span>
         </div>
 
         <div className="landing-nav-actions">
           <button type="button" className="btn-secondary" onClick={onEnterPassenger}>
-            📱 Passenger Pass
+            Passenger Portal ↗
           </button>
           <button type="button" className="btn-secondary" onClick={onEnterTelemetry}>
-            📡 Sensor Feeds
+            Telemetry Feed (C-1)
           </button>
           <button type="button" className="btn-secondary" onClick={onEnterConflicts}>
-            ⚖️ Truth Ledger
+            Truth Ledger (C-2)
           </button>
           {currentUser ? (
             <button type="button" className="btn-user-pill" onClick={onEnterOperator}>
@@ -125,161 +126,148 @@ export function LandingPage({
             </button>
           ) : (
             <button type="button" className="btn-login-cta" onClick={onOpenLogin}>
-              SIGN IN / REGISTER →
+              SIGN IN →
             </button>
           )}
         </div>
       </header>
 
-      {/* Hero Section - Center Aligned & Simple to Understand */}
+      {/* Hero Section */}
       <section className="landing-hero centered-hero">
-        <div className="hero-kicker">TRAIN & BUS EMERGENCY RESCUE DISPATCHER</div>
+        <div className="hero-kicker">AUTONOMOUS CORRIDOR RESILIENCE & PRIORITY DISPATCH</div>
         <h1 className="hero-title centered-title">
-          Fair Passenger Allocation Under Adverse Corridor Chaos
+          Deterministic Priority Allocation Under Adverse Transit Disruption
         </h1>
         <p className="hero-description centered-desc">
-          When trains break down and stations fill with crowds, there are never enough rescue buses for everyone at once.
-          This system makes sure families with babies, elderly grandparents, and wheelchair riders get safe seats first—fairly,
-          calmly, and without separating families.
+          When mainline rail corridors suffer catastrophic blockades, emergency fleets cannot meet peak demand.
+          The Stranded Network computes sub-millisecond priority allocations honoring accessibility, whole-party preservation,
+          and transparent mathematical explanations—while actively filtering corrupted telemetry and arbitrating stale conflicting data.
         </p>
 
         <div className="hero-actions centered-actions">
           <button type="button" className="hero-btn-primary" onClick={onEnterOperator}>
-            OPEN RESCUE DISPATCH TERMINAL →
+            LAUNCH OPERATOR TERMINAL →
           </button>
-          <button type="button" className="hero-btn-outline" onClick={onEnterConflicts}>
-            SEE HOW WE CHECK THE TRUTH ↗
+          <button type="button" className="hero-btn-outline" onClick={onEnterPassenger}>
+            OPEN PASSENGER APP 📱
           </button>
         </div>
 
-        {/* Clean, Non-Boxed Status Bar */}
+        {/* Minimal Ticker */}
         <div className="hero-simple-ticker">
           <div className="ticker-item">
-            <strong>58</strong> <span>People Waiting</span>
+            <strong>58</strong> <span>Unresolved Parties</span>
           </div>
           <span className="ticker-sep">•</span>
           <div className="ticker-item">
-            <strong>0</strong> <span>Overcrowded Buses</span>
+            <strong>0</strong> <span>Over-Allocation Violations</span>
           </div>
           <span className="ticker-sep">•</span>
           <div className="ticker-item">
-            <strong>100%</strong> <span>Families Kept Together</span>
+            <strong>100%</strong> <span>Family Party Integrity</span>
           </div>
           <span className="ticker-sep">•</span>
           <div className="ticker-item">
-            <strong>6</strong> <span>Live Track Radars</span>
+            <strong>6</strong> <span>Active IoT Feeds</span>
           </div>
           <span className="ticker-sep">•</span>
           <div className="ticker-item highlight">
-            <strong>Active</strong> <span>Truth-Checker Guard</span>
+            <strong>Anti-LWW</strong> <span>Decay Guard Online</span>
           </div>
         </div>
       </section>
 
-      {/* Section 2: Clean Editorial List (No Cookie-Cutter Box Cards) */}
+      {/* Architectural Pillars Section */}
       <section className="landing-editorial-section">
         <div className="editorial-header">
-          <span className="editorial-kicker">HOW THE SYSTEM PROTECTS EVERYONE</span>
-          <h2>Three Simple Rules That Keep People Safe</h2>
+          <span className="editorial-kicker">CORE SYSTEM INVARIANTS</span>
+          <h2>Engineered for High-Consequence Physical Operations</h2>
           <p className="editorial-sub">
-            Designed so that passengers are treated with care, bad sensor data is thrown away, and fake news never tricks the dispatchers.
+            Three deterministic guarantees that protect passenger equity and ensure regulatory auditability.
           </p>
         </div>
 
         <ol className="editorial-list">
-          {/* Item 1 */}
           <li className="editorial-list-item">
-            <div className="item-index">1</div>
+            <div className="item-index">01</div>
             <div className="item-body">
-              <h3>Fair Seats for People Who Need Them Most</h3>
+              <h3>Transparent Priority Allocation & Capacity Verification</h3>
               <p className="item-lead">
-                If a rescue bus has 40 seats but 100 people are stranded, who gets on first?
+                Deterministic multi-party scheduling with verifiable zero over-allocation guarantees.
               </p>
               <p className="item-text">
-                Instead of first-come, first-served or chaotic rushing, the computer gives seats to people who need extra help.
-                Travelers using wheelchairs, grandparents, parents with infants, and people who need to reach a hospital or flight
-                are placed on the earliest buses. Most importantly: <strong>families are never split up</strong> across different buses,
-                and no bus is ever allowed to take more people than it has seats.
+                Rather than arbitrary queuing, placements are computed via five transparent scoring policies: Wheelchair step-free compliance,
+                vulnerability factors (elderly, infants, medical), transfer deadline urgency, wait duration accumulation, and confirmed bookings.
+                Every party receives an exact 0–100 mathematical score breakdown with proportional impact hairlines.
+                <strong>Whole-party integrity is invariant:</strong> traveling parties are never partitioned across split coaches.
               </p>
-              <div className="kid-friendly-note">
-                👶 <strong>In simple words:</strong> Grandparents, babies, and injured people get on first. You never get separated from your mom or dad.
-              </div>
             </div>
           </li>
 
-          {/* Item 2 */}
           <li className="editorial-list-item">
-            <div className="item-index">2</div>
+            <div className="item-index">02</div>
             <div className="item-body">
-              <h3>Catching and Throwing Away Glitchy Sensors (Constraint 1)</h3>
+              <h3>Constraint 1: Telemetry Quality Ingestion & Anomaly Mitigation</h3>
               <p className="item-lead">
-                What happens when physical cameras, radars, or track sensors break?
+                Active filtration of missing heartbeats, frozen ADC sensors, physical speed spikes, and jitter.
               </p>
               <p className="item-text">
-                Electronic sensors get hit by rain, lightning, or software bugs. A broken radar might report that a bus suddenly
-                jumped to 450 km/h, or a turnstile camera might freeze on the exact same number for an hour.
-                Our system checks every incoming reading. If a number is physically impossible, frozen, shaking wildly, or arriving
-                minutes late, the computer rejects the fake number and uses smooth mathematics to protect the schedule.
+                Raw sensor inputs from trackside Doppler radar, platform turnstiles, and vehicle GPS units pass through six analytical safeguards
+                before affecting the schedule. Utilizing Median Absolute Deviation (MAD) and normalized Modified Z-Scores (threshold 3.5),
+                physically impossible speed spikes (e.g. 450 km/h radar artifacts) are rejected and clamped via Exponential Moving Average (EMA).
+                Consecutive zero-variance ticks trigger automated sensor quarantine to prevent schedule pollution.
               </p>
-              <div className="kid-friendly-note">
-                👶 <strong>In simple words:</strong> If a broken speedometer claims a bus is flying like a jet plane, the computer knows it's a lie and throws it in the trash.
-              </div>
             </div>
           </li>
 
-          {/* Item 3 */}
           <li className="editorial-list-item">
-            <div className="item-index">3</div>
+            <div className="item-index">03</div>
             <div className="item-body">
-              <h3>Never Believing Old News Just Because It Arrived Late (Constraint 2)</h3>
+              <h3>Constraint 2: Anti-LWW Truth Arbitration & Staleness Half-Life Decay</h3>
               <p className="item-lead">
-                What if two reports say opposite things, and one message is old?
+                Multi-attribute decision vectors that refuse to naively trust arrival order over physical truth.
               </p>
               <p className="item-text">
-                Imagine a station manager sees a broken track at 9:00 AM and reports: <em>"Track is broken—danger!"</em>
-                Meanwhile, an old automated computer from 7:00 AM had sent a message: <em>"Tracks are clear."</em>
-                Because the cellular network was slow, that 7:00 AM message happens to arrive on your screen at 9:02 AM!
-                A foolish computer would look at the arrival time (9:02 &gt; 9:00) and say: <em>"The newest message says tracks are clear, let's send the train!"</em>
-                That causes accidents. Our system calculates how old each piece of news really is, penalizes stale messages, and double-checks live track radars before making decisions.
+                Standard Last-Write-Wins (LWW) is hazardous in transit operations: a 45-minute-old cached report arriving late over high-latency
+                satellite links will silently overwrite a 2-minute-old emergency track closure. Our Truth Arbitrator scores competing records
+                against six vectors: physical event age with exponential half-life decay (180s), hierarchical source authority (SCADA &gt; Dispatch &gt; Crowdsource),
+                Doppler radar corroboration, and Lamport causal vector clocks. Ambiguous ties trigger an immediate fail-safe quarantine.
               </p>
-              <div className="kid-friendly-note">
-                👶 <strong>In simple words:</strong> Just because a letter arrived in your mailbox today doesn't mean it's today's news. The computer refuses to be fooled by old messages.
-              </div>
             </div>
           </li>
         </ol>
       </section>
 
-      {/* Section 3: Interactive Sandbox (Easy to test & understand) */}
+      {/* Interactive Simulation Sandbox */}
       <section className="landing-sandbox-clean">
         <div className="sandbox-wrapper">
           <div className="sandbox-top">
             <div className="sandbox-title-wrap">
-              <span className="sandbox-badge">TEST BENCH</span>
-              <h3>Try It Yourself: See How The System Catches Mistakes</h3>
-              <p>Click any button below to pretend a sensor broke or two reports disagreed. Watch what the computer does:</p>
+              <span className="sandbox-badge">INTERACTIVE SIMULATION</span>
+              <h3>Verify Engine Behavior Under Adverse Scenarios</h3>
+              <p>Trigger live telemetry failure modes or multi-source conflicts and observe automated kernel responses:</p>
             </div>
             <div className="sandbox-indicator">
               <span className="indicator-dot" />
-              <span>SYSTEM READY</span>
+              <span>KERNEL ONLINE</span>
             </div>
           </div>
 
           <div className="sandbox-button-groups">
             <div className="sandbox-group">
-              <span className="group-heading">TEST SENSOR GLITCHES (CONSTRAINT 1):</span>
+              <span className="group-heading">CONSTRAINT 1: SENSOR INGESTION ANOMALIES</span>
               <div className="group-buttons">
                 <button
                   type="button"
                   className="clean-test-btn"
                   onClick={() => triggerTelemetrySimulation(
                     'spike',
-                    '⚡ Fake 450 km/h Speed Spike',
-                    'The computer saw the speed was impossible (max 140 km/h) and threw out the spike.'
+                    '⚡ Physical Speed Spike (450 km/h)',
+                    'Sensor Doppler reported 450 km/h. Exceeded nominal corridor ceiling (140 km/h); clamped via EMA filter.'
                   )}
                   disabled={injecting}
                 >
-                  ⚡ Send Fake 450 km/h Speed
+                  ⚡ Inject 450 km/h Radar Spike
                 </button>
 
                 <button
@@ -287,12 +275,12 @@ export function LandingPage({
                   className="clean-test-btn"
                   onClick={() => triggerTelemetrySimulation(
                     'stuck',
-                    '❄️ Frozen Sensor Test',
-                    'The computer noticed 5 identical numbers in a row and flagged the sensor as stuck.'
+                    '❄️ Frozen ADC Sensor Lock',
+                    'Detected 5 consecutive identical readings with zero variance. Sensor transitioned to QUARANTINED.'
                   )}
                   disabled={injecting}
                 >
-                  ❄️ Send Frozen Stuck Sensor
+                  ❄️ Inject Frozen ADC Sensor
                 </button>
 
                 <button
@@ -300,12 +288,12 @@ export function LandingPage({
                   className="clean-test-btn"
                   onClick={() => triggerTelemetrySimulation(
                     'high_jitter',
-                    '〰️ Wildly Shaking Numbers',
-                    'The computer detected extreme jitter and smoothed out the noise using an adaptive filter.'
+                    '〰️ High-Frequency Jitter Noise',
+                    'Rate of change exceeded domain threshold. Signal smoothed via adaptive low-pass filter.'
                   )}
                   disabled={injecting}
                 >
-                  〰️ Send Wildly Shaking Numbers
+                  〰️ Inject Excessive Variance
                 </button>
 
                 <button
@@ -313,30 +301,30 @@ export function LandingPage({
                   className="clean-test-btn"
                   onClick={() => triggerTelemetrySimulation(
                     'conflicting_sensors',
-                    '🔀 Two Sensors Disagreeing',
-                    'One sensor claimed 380 people, another said 20. The computer isolated the outlier and balanced the truth.'
+                    '🔀 Divergent Multi-Sensor Ingest',
+                    'Two optical sensors disagreed on platform density. Inverse-variance fusion isolated consensus.'
                   )}
                   disabled={injecting}
                 >
-                  🔀 Two Sensors Disagreeing
+                  🔀 Inject Conflicting Sensors
                 </button>
               </div>
             </div>
 
             <div className="sandbox-group">
-              <span className="group-heading">TEST CONFLICTING NEWS & OLD REPORTS (CONSTRAINT 2):</span>
+              <span className="group-heading">CONSTRAINT 2: ANTI-LWW TRUTH ARBITRATION</span>
               <div className="group-buttons">
                 <button
                   type="button"
                   className="clean-test-btn special"
                   onClick={() => triggerConflictSimulation(
                     'stale_new_arrival',
-                    '🛡️ Old News Arriving Now Trap',
-                    'A 45-minute-old report arrived 2 seconds ago. The system ignored arrival order and accepted the fresh report!'
+                    '🛡️ Delayed Satellite Stale Replay',
+                    '45-minute-old clearance arrived 2s ago. Anti-LWW half-life decay rejected stale record in favor of fresh closure.'
                   )}
                   disabled={injecting}
                 >
-                  🛡️ Test Old News Arriving Late
+                  🛡️ Test Stale Satellite Replay
                 </button>
 
                 <button
@@ -344,12 +332,12 @@ export function LandingPage({
                   className="clean-test-btn special"
                   onClick={() => triggerConflictSimulation(
                     'witness_corroborated_blockade',
-                    '📡 Check Track Radar Witness',
-                    'A report claimed the track was open, but the track radar measured 0 km/h. Radar proved the track is closed!'
+                    '📡 Physical Doppler Radar Corroboration',
+                    'Report claimed corridor open, but trackside Doppler measured 0 km/h velocity. Radar physical witness verified blockade.'
                   )}
                   disabled={injecting}
                 >
-                  📡 Check Live Track Radar
+                  📡 Test Radar Witness Corroboration
                 </button>
 
                 <button
@@ -357,22 +345,22 @@ export function LandingPage({
                   className="clean-test-btn special"
                   onClick={() => triggerConflictSimulation(
                     'close_call_quarantine',
-                    '⚠️ 50-50 Tie: Hold for Safety',
-                    'Two reports had equal trust and no clear winner. The system stopped and alerted a human instead of guessing.'
+                    '⚠️ Ambiguous 50-50 Tie Quarantine',
+                    'Conflicting reports scored within 0.15 confidence margin. System halted automated dispatch and entered QUARANTINE.'
                   )}
                   disabled={injecting}
                 >
-                  ⚠️ 50-50 Tie: Hold for Safety
+                  ⚠️ Test Ambiguous Tie Quarantine
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Simple Live Log */}
+          {/* Real-Time Audit Log Terminal */}
           <div className="sandbox-live-log">
             <div className="live-log-header">
-              <span>WHAT THE COMPUTER JUST DID ({sandboxLog.length} ACTIONS)</span>
-              <span>LIVE SYSTEM LOG</span>
+              <span>REAL-TIME AUDIT STREAM ({sandboxLog.length} EVENTS)</span>
+              <span>GROUND TRUTH TELEMETRY</span>
             </div>
             <div className="live-log-items">
               {sandboxLog.map((item, idx) => (
@@ -390,17 +378,18 @@ export function LandingPage({
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Sleek Minimal Footer */}
       <footer className="landing-footer">
         <div className="footer-left">
-          <strong>THE STRANDED NETWORK</strong> — Emergency Disruption Management System
-          <p>Helping stranded rail and bus passengers get home safely and fairly.</p>
+          <strong>THE STRANDED NETWORK</strong> // MISSION-CRITICAL DISRUPTION DISPATCH
+          <p>Deterministic passenger allocation, telemetry anomaly filtration, and Anti-LWW truth arbitration.</p>
         </div>
         <div className="footer-links">
-          <button type="button" onClick={onEnterOperator}>Rescue Dispatch Terminal</button>
-          <button type="button" onClick={onEnterTelemetry}>Sensor Health Monitor</button>
-          <button type="button" onClick={onEnterConflicts}>Truth Arbitration Ledger</button>
-          <button type="button" onClick={onOpenLogin}>Staff Sign In</button>
+          <button type="button" onClick={onEnterOperator}>Operator Terminal</button>
+          <button type="button" onClick={onEnterPassenger}>Passenger App</button>
+          <button type="button" onClick={onEnterTelemetry}>Telemetry Monitor</button>
+          <button type="button" onClick={onEnterConflicts}>Conflict Ledger</button>
+          <button type="button" onClick={onOpenLogin}>Staff Access</button>
         </div>
       </footer>
     </div>
