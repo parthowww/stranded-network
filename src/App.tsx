@@ -10,6 +10,11 @@ import { Capacity } from './components/Capacity';
 import { Groups } from './components/Groups';
 import { Parties } from './components/Parties';
 import { Controls } from './components/Controls';
+import { LandingPage } from './landing/LandingPage';
+import { LoginPage } from './auth/LoginPage';
+import { TelemetryMonitor } from './telemetry/TelemetryMonitor';
+import { ConflictLedger } from './conflicts/ConflictLedger';
+import { authStore, type UserProfile } from './auth/authStore';
 import './styles.css';
 
 const INITIAL_DATA = generateSeedData();
@@ -24,7 +29,8 @@ const ALL_STOPS = [
   'Madurai',
 ];
 
-type OperatorTab = 'overview' | 'roster' | 'corridors' | 'all';
+type OperatorTab = 'overview' | 'roster' | 'corridors' | 'telemetry' | 'conflicts' | 'all';
+type ViewMode = 'landing' | 'operator' | 'passenger' | 'login';
 
 export function App() {
   const [parties] = useState(INITIAL_DATA.parties);
@@ -34,19 +40,26 @@ export function App() {
   const [manualOverrides, setManualOverrides] = useState<Record<string, ManualOverride>>({});
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
+  // Active User session
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => authStore.getUser());
+
   // Navigation tab for Operator Dashboard
   const [operatorTab, setOperatorTab] = useState<OperatorTab>('overview');
 
-  // View state: 'operator' dashboard vs 'passenger' mobile app
-  const [view, setView] = useState<'operator' | 'passenger'>(() => {
+  // View state: 'landing' vs 'operator' vs 'passenger' vs 'login'
+  const [view, setView] = useState<ViewMode>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('view') === 'passenger') return 'passenger';
+      const v = params.get('view');
+      if (v === 'passenger') return 'passenger';
+      if (v === 'operator') return 'operator';
+      if (v === 'login') return 'login';
+      if (v === 'landing') return 'landing';
     }
-    return 'operator';
+    return 'landing'; // Default landing page
   });
 
-  const [showPhoneModal, setShowPhoneModal] = useState<boolean>(false);
+  const [controlsOpen, setControlsOpen] = useState<boolean>(true);
 
   // Keep data-theme on html element in sync
   useEffect(() => {
@@ -171,13 +184,48 @@ export function App() {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  const handleOpenPhoneWindow = () => {
-    if (typeof window !== 'undefined') {
-      window.open('?view=passenger', '_blank', 'width=450,height=880,resizable=yes,scrollbars=yes');
-    }
+  const handleLogout = () => {
+    authStore.logout();
+    setCurrentUser(null);
   };
 
-  // If in passenger standalone view
+  // View Routing: Landing Page
+  if (view === 'landing') {
+    return (
+      <LandingPage
+        onEnterOperator={() => {
+          setOperatorTab('overview');
+          setView('operator');
+        }}
+        onEnterTelemetry={() => {
+          setOperatorTab('telemetry');
+          setView('operator');
+        }}
+        onEnterConflicts={() => {
+          setOperatorTab('conflicts');
+          setView('operator');
+        }}
+        onEnterPassenger={() => setView('passenger')}
+        onOpenLogin={() => setView('login')}
+        currentUser={currentUser}
+      />
+    );
+  }
+
+  // View Routing: Login Page
+  if (view === 'login') {
+    return (
+      <LoginPage
+        onSuccess={(user) => {
+          setCurrentUser(user);
+          setView('operator');
+        }}
+        onBackToHome={() => setView('landing')}
+      />
+    );
+  }
+
+  // View Routing: Passenger Standalone App
   if (view === 'passenger') {
     return (
       <CustomerApp
@@ -187,6 +235,7 @@ export function App() {
     );
   }
 
+  // View Routing: Operator Terminal Dashboard
   return (
     <div className="app-layout">
       <main className="main-column">
@@ -195,22 +244,45 @@ export function App() {
           <div className="op-terminal-tag">
             <span className="station-dot" />
             <span>DISRUPTION MANAGEMENT TERMINAL</span>
+            <button
+              type="button"
+              className="op-home-link"
+              onClick={() => setView('landing')}
+            >
+              ← LANDING
+            </button>
           </div>
 
           <div className="op-actions">
-            <button
-              type="button"
-              className="op-action-btn highlight"
-              onClick={() => setShowPhoneModal(true)}
-            >
-              📱 Preview Customer Phone App
-            </button>
+            {currentUser ? (
+              <div className="op-user-badge">
+                <span className="user-icon">👤</span>
+                <span className="user-name">{currentUser.name}</span>
+                <button
+                  type="button"
+                  className="op-logout-btn"
+                  onClick={handleLogout}
+                  title="Sign out"
+                >
+                  LOGOUT
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="op-action-btn"
+                onClick={() => setView('login')}
+              >
+                SIGN IN
+              </button>
+            )}
+
             <button
               type="button"
               className="op-action-btn"
-              onClick={handleOpenPhoneWindow}
+              onClick={() => setView('passenger')}
             >
-              ↗ Open in Phone Window
+              📱 Passenger App
             </button>
           </div>
         </div>
@@ -237,6 +309,20 @@ export function App() {
             onClick={() => setOperatorTab('corridors')}
           >
             Corridor Demand
+          </button>
+          <button
+            type="button"
+            className={`op-nav-tab ${operatorTab === 'telemetry' ? 'active' : ''}`}
+            onClick={() => setOperatorTab('telemetry')}
+          >
+            📡 Telemetry Ingestion (C-1)
+          </button>
+          <button
+            type="button"
+            className={`op-nav-tab ${operatorTab === 'conflicts' ? 'active' : ''}`}
+            onClick={() => setOperatorTab('conflicts')}
+          >
+            ⚖️ Conflict Ledger (C-2)
           </button>
           <button
             type="button"
@@ -289,6 +375,16 @@ export function App() {
             onPlaceAlternative={handlePlaceAlternative}
           />
         )}
+
+        {/* Tab 4: Telemetry Monitor (Constraint 1) */}
+        {operatorTab === 'telemetry' && (
+          <TelemetryMonitor />
+        )}
+
+        {/* Tab 5: Conflict Ledger (Constraint 2) */}
+        {operatorTab === 'conflicts' && (
+          <ConflictLedger />
+        )}
       </main>
 
       <Controls
@@ -298,6 +394,8 @@ export function App() {
         allStops={ALL_STOPS}
         decisionLog={result.log}
         theme={theme}
+        isOpen={controlsOpen}
+        onToggleOpen={() => setControlsOpen((prev) => !prev)}
         onToggleVehicle={handleToggleVehicle}
         onUpdateVehicleSeats={handleUpdateVehicleSeats}
         onUpdateVehicleDelay={handleUpdateVehicleDelay}
@@ -306,26 +404,6 @@ export function App() {
         onToggleTheme={handleToggleTheme}
         onResetScenario={handleResetScenario}
       />
-
-      {/* In-Dashboard Phone Simulator Modal */}
-      {showPhoneModal && (
-        <div className="phone-modal-overlay" onClick={() => setShowPhoneModal(false)}>
-          <div className="phone-modal-container" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              className="phone-modal-close"
-              onClick={() => setShowPhoneModal(false)}
-              aria-label="Close phone simulator"
-            >
-              ✕ CLOSE
-            </button>
-            <CustomerApp
-              standalone={false}
-              onBackToOperator={() => setShowPhoneModal(false)}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

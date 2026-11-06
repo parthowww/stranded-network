@@ -4,6 +4,8 @@ import { DEFAULT_RULES } from '../engine/score';
 import { allocate, getEffectiveStops } from '../engine/allocate';
 import type { Vehicle, Rule, ManualOverride } from '../engine/types';
 import { syncManager, type SyncPayload } from '../sync/broadcast';
+import { authStore, type UserProfile } from '../auth/authStore';
+import { CustomerLogin } from './CustomerLogin';
 
 const SEED = generateSeedData();
 
@@ -28,6 +30,7 @@ type CustomerViewMode = 'my-ticket' | 'search-route';
 export const CustomerApp: React.FC<CustomerAppProps> = ({
   onBackToOperator,
 }) => {
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => authStore.getUser());
   const [parties] = useState(SEED.parties);
   const [selectedPartyId, setSelectedPartyId] = useState<string>('P-001');
   const [viewMode, setViewMode] = useState<CustomerViewMode>('my-ticket');
@@ -164,6 +167,16 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
     });
   };
 
+  if (!currentUser) {
+    return (
+      <div className="customer-app-wrapper">
+        <div className="customer-phone-frame">
+          <CustomerLogin onSuccess={(user) => setCurrentUser(user)} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="customer-app-wrapper">
       <div className="customer-phone-frame">
@@ -183,6 +196,13 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
               Operator View ↗
             </button>
           )}
+          <button
+            type="button"
+            className="cust-signout-btn"
+            onClick={() => { authStore.logout(); setCurrentUser(null); }}
+          >
+            {currentUser.name.split(' ')[0]} · SIGN OUT
+          </button>
         </header>
 
         {/* Customer Segmented Navigation: My Ticket vs Search Route */}

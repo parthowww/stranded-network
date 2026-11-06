@@ -3,13 +3,15 @@ import * as Switch from '@radix-ui/react-switch';
 import * as Slider from '@radix-ui/react-slider';
 import type { Vehicle, Rule } from '../engine/types';
 
-interface ControlsProps {
+export interface ControlsProps {
   vehicles: Vehicle[];
   rules: Rule[];
   closedStops: Set<string>;
   allStops: string[];
   decisionLog: string[];
   theme: 'light' | 'dark';
+  isOpen?: boolean;
+  onToggleOpen?: () => void;
   onToggleVehicle: (id: string) => void;
   onUpdateVehicleSeats: (id: string, seats: number) => void;
   onUpdateVehicleDelay: (id: string, delay: number) => void;
@@ -28,6 +30,8 @@ export const Controls: React.FC<ControlsProps> = ({
   allStops,
   decisionLog,
   theme,
+  isOpen = true,
+  onToggleOpen,
   onToggleVehicle,
   onUpdateVehicleSeats,
   onUpdateVehicleDelay,
@@ -41,6 +45,22 @@ export const Controls: React.FC<ControlsProps> = ({
 
   const activeVehiclesCount = vehicles.filter((v) => v.on).length;
 
+  if (!isOpen) {
+    return (
+      <aside className="controls-column controls-collapsed-strip">
+        <button
+          type="button"
+          className="controls-expand-strip-btn"
+          onClick={onToggleOpen}
+          title="Open Controls Panel"
+          aria-label="Open Controls"
+        >
+          <span>◀ CONTROLS</span>
+        </button>
+      </aside>
+    );
+  }
+
   return (
     <aside className="controls-column">
       <div className="controls-header">
@@ -50,14 +70,27 @@ export const Controls: React.FC<ControlsProps> = ({
             Station Dispatch Settings
           </span>
         </div>
-        <button
-          type="button"
-          className="theme-toggle-btn"
-          onClick={onToggleTheme}
-          aria-label="Toggle dark/light theme"
-        >
-          Theme: {theme === 'dark' ? 'Dark ☾' : 'Light ☼'}
-        </button>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <button
+            type="button"
+            className="theme-toggle-btn"
+            onClick={onToggleTheme}
+            aria-label="Toggle dark/light theme"
+          >
+            {theme === 'dark' ? 'Dark ☾' : 'Light ☼'}
+          </button>
+          {onToggleOpen && (
+            <button
+              type="button"
+              className="controls-collapse-btn"
+              onClick={onToggleOpen}
+              title="Collapse Controls Panel"
+              aria-label="Collapse Controls"
+            >
+              ▶ HIDE
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Control Segmented Tabs */}
@@ -81,108 +114,95 @@ export const Controls: React.FC<ControlsProps> = ({
           className={`control-tab-btn ${activeTab === 'rules' ? 'active' : ''}`}
           onClick={() => setActiveTab('rules')}
         >
-          Policy Rules
+          Weights
         </button>
       </div>
 
-      <div className="control-tab-content">
-        {/* Tab 1: Fleet */}
+      <div className="controls-body">
+        {/* Tab 1: Fleet Toggles */}
         {activeTab === 'fleet' && (
-          <div className="controls-group" style={{ borderBottom: 'none' }}>
-            <h3 className="controls-group-title">Fleet Dispatch & Delays</h3>
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--mid-grey)', marginBottom: '12px' }}>
-              Toggle replacement coaches or adjust departure delays.
-            </p>
+          <div className="controls-group">
+            <span className="group-label">Toggle Vehicle Availability & Seats</span>
+            {vehicles.map((v) => (
+              <div key={v.id} className="vehicle-control-row">
+                <div className="vehicle-control-header">
+                  <span className="vehicle-control-name">
+                    {v.name}
+                    {v.accSeats > 0 && <span className="acc-tag">♿ {v.accSeats}</span>}
+                  </span>
+                  <Switch.Root
+                    className="switch-root"
+                    checked={v.on}
+                    onCheckedChange={() => onToggleVehicle(v.id)}
+                    aria-label={`Toggle ${v.name}`}
+                  >
+                    <Switch.Thumb className="switch-thumb" />
+                  </Switch.Root>
+                </div>
 
-            <div className="vehicles-controls-list">
-              {vehicles.map((v) => (
-                <div key={v.id} className="control-vehicle-item">
-                  <div className="control-vehicle-head">
-                    <div>
-                      <strong style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-sm)' }}>
-                        {v.name}
-                      </strong>
-                      <div style={{ fontSize: '11px', color: 'var(--mid-grey)', fontFamily: 'var(--font-mono)' }}>
-                        {v.from} · Base dep +{v.dep}m
-                      </div>
+                <div className="vehicle-control-sub">
+                  <span className="sub-detail">
+                    {v.from} → {Object.keys(v.stops).join(' → ')}
+                  </span>
+                </div>
+
+                {v.on && (
+                  <div className="vehicle-modifiers">
+                    <div className="modifier-item">
+                      <label htmlFor={`seats-${v.id}`}>Seats:</label>
+                      <input
+                        id={`seats-${v.id}`}
+                        type="number"
+                        min="0"
+                        max="200"
+                        value={v.seats}
+                        onChange={(e) =>
+                          onUpdateVehicleSeats(v.id, parseInt(e.target.value, 10) || 0)
+                        }
+                        className="modifier-input"
+                      />
                     </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
-                        {v.on ? 'Active' : 'Cancelled'}
-                      </span>
-                      <Switch.Root
-                        className="radix-switch-root"
-                        checked={v.on}
-                        onCheckedChange={() => onToggleVehicle(v.id)}
-                        aria-label={`Toggle ${v.name}`}
-                      >
-                        <Switch.Thumb className="radix-switch-thumb" />
-                      </Switch.Root>
+                    <div className="modifier-item">
+                      <label htmlFor={`delay-${v.id}`}>Delay (m):</label>
+                      <input
+                        id={`delay-${v.id}`}
+                        type="number"
+                        min="0"
+                        max="240"
+                        value={v.delay}
+                        onChange={(e) =>
+                          onUpdateVehicleDelay(v.id, parseInt(e.target.value, 10) || 0)
+                        }
+                        className="modifier-input"
+                      />
                     </div>
                   </div>
-
-                  {v.on && (
-                    <div className="control-vehicle-fields">
-                      <div className="control-field">
-                        <label>Seats ({v.seats})</label>
-                        <input
-                          type="number"
-                          min={1}
-                          max={80}
-                          value={v.seats}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value, 10);
-                            if (!isNaN(val) && val >= 0) {
-                              onUpdateVehicleSeats(v.id, val);
-                            }
-                          }}
-                        />
-                      </div>
-
-                      <div className="control-field">
-                        <label>Delay (min)</label>
-                        <input
-                          type="number"
-                          min={0}
-                          max={300}
-                          step={5}
-                          value={v.delay}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value, 10);
-                            if (!isNaN(val) && val >= 0) {
-                              onUpdateVehicleDelay(v.id, val);
-                            }
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Tab 2: Closures */}
+        {/* Tab 2: Corridor Stop Closures */}
         {activeTab === 'closures' && (
-          <div className="controls-group" style={{ borderBottom: 'none' }}>
-            <h3 className="controls-group-title">Corridor Closures</h3>
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--mid-grey)', marginBottom: '14px' }}>
-              Click any affected station to declare it closed. Route truncates at the first closed stop.
+          <div className="controls-group">
+            <span className="group-label">Corridor Stop Closures</span>
+            <p className="controls-hint">
+              Closing a stop truncates vehicles at that stop; all downstream stations become unreachable.
             </p>
-            <div className="stop-closures-grid">
+            <div className="stops-grid">
               {allStops.map((stop) => {
                 const isClosed = closedStops.has(stop);
                 return (
                   <button
                     key={stop}
                     type="button"
-                    className={`stop-tag ${isClosed ? 'closed' : ''}`}
+                    className={`stop-toggle-btn ${isClosed ? 'closed' : 'open'}`}
                     onClick={() => onToggleStopClosed(stop)}
-                    aria-pressed={isClosed}
                   >
-                    {stop} {isClosed ? '✕ CLOSED' : ''}
+                    <span className="stop-status-dot" />
+                    <span className="stop-name">{stop}</span>
+                    <span className="stop-tag">{isClosed ? 'BLOCKED' : 'OPEN'}</span>
                   </button>
                 );
               })}
@@ -190,33 +210,28 @@ export const Controls: React.FC<ControlsProps> = ({
           </div>
         )}
 
-        {/* Tab 3: Priority Policy Rules */}
+        {/* Tab 3: Priority Scoring Rule Weights */}
         {activeTab === 'rules' && (
-          <div className="controls-group" style={{ borderBottom: 'none' }}>
-            <h3 className="controls-group-title">Priority Policy Weights</h3>
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--mid-grey)', marginBottom: '14px' }}>
-              Adjust allocation weight per rule (0–100). Allocation recalculates instantaneously.
-            </p>
-
-            {rules.map((rule) => (
-              <div key={rule.key} className="rule-slider-item">
+          <div className="controls-group">
+            <span className="group-label">Priority Weights (0–50)</span>
+            {rules.map((r) => (
+              <div key={r.key} className="rule-slider-row">
                 <div className="rule-slider-header">
-                  <span>{rule.label}</span>
-                  <span className="rule-slider-weight num">{rule.weight}</span>
+                  <span className="rule-name">{r.label}</span>
+                  <span className="rule-weight-value">{r.weight}</span>
                 </div>
-                <p className="rule-slider-desc">{rule.description}</p>
                 <Slider.Root
-                  className="radix-slider-root"
-                  value={[rule.weight]}
-                  max={100}
+                  className="slider-root"
+                  value={[r.weight]}
+                  max={50}
                   step={1}
-                  onValueChange={([val]) => onUpdateRuleWeight(rule.key, val)}
-                  aria-label={rule.label}
+                  onValueChange={(val) => onUpdateRuleWeight(r.key, val[0])}
+                  aria-label={r.label}
                 >
-                  <Slider.Track className="radix-slider-track">
-                    <Slider.Range className="radix-slider-range" />
+                  <Slider.Track className="slider-track">
+                    <Slider.Range className="slider-range" />
                   </Slider.Track>
-                  <Slider.Thumb className="radix-slider-thumb" />
+                  <Slider.Thumb className="slider-thumb" />
                 </Slider.Root>
               </div>
             ))}
@@ -232,7 +247,7 @@ export const Controls: React.FC<ControlsProps> = ({
           onClick={() => setShowLog(!showLog)}
           style={{ width: '100%', textAlign: 'left', marginBottom: showLog ? '10px' : '0' }}
         >
-          <span>{showLog ? '▲ Hide' : '▼ View'} Engine Decision Audit Log ({decisionLog.length})</span>
+          <span>{showLog ? '▲ Hide' : '▼ View'} Decision Log ({decisionLog.length})</span>
         </button>
 
         {showLog && (
