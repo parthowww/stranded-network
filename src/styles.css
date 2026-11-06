@@ -1,19 +1,18 @@
-@import '@fontsource-variable/bricolage-grotesque';
-@import '@fontsource-variable/geist';
+@import '@fontsource-variable/inter';
 @import '@fontsource-variable/geist-mono';
 
 :root {
-  --paper: #ECEEF0;
-  --ink: #0E1116;
-  --mid-grey: #6B7480;
-  --rule: #C9CED4;
-  --signal: #1F3DFF;
+  --paper: #FAFAFA;
+  --ink: #09090B;
+  --mid-grey: #71717A;
+  --rule: #E4E4E7;
+  --signal: #2563EB;
 
-  --font-display: 'Bricolage Grotesque Variable', sans-serif;
-  --font-body: 'Geist Variable', sans-serif;
-  --font-mono: 'Geist Mono Variable', monospace;
+  --font-display: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, monospace;
 
-  --tracking-tight: -0.04em;
+  --tracking-tight: -0.03em;
   --tracking-normal: -0.01em;
 
   --space-1: 4px;
@@ -36,19 +35,19 @@
 }
 
 :root[data-theme="dark"] {
-  --paper: #0E1116;
-  --ink: #ECEEF0;
-  --mid-grey: #8E98A5;
-  --rule: #252B35;
-  --signal: #7C93FF;
+  --paper: #09090B;
+  --ink: #FAFAFA;
+  --mid-grey: #A1A1AA;
+  --rule: #27272A;
+  --signal: #3B82F6;
 }
 
 :root[data-theme="light"] {
-  --paper: #ECEEF0;
-  --ink: #0E1116;
-  --mid-grey: #6B7480;
-  --rule: #C9CED4;
-  --signal: #1F3DFF;
+  --paper: #FAFAFA;
+  --ink: #09090B;
+  --mid-grey: #71717A;
+  --rule: #E4E4E7;
+  --signal: #2563EB;
 }
 
 * {
