@@ -1,6 +1,34 @@
 import { Router, Request, Response } from 'express';
 import { getSupabase, isSupabaseConfigured, localStore } from '../db/supabaseClient';
 
+// Helper: write an audit event to both local store and Supabase
+async function writeAuditLog(event_type: string, actor: string, details: object) {
+  const entry = {
+    id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    event_type,
+    actor,
+    details,
+    created_at: new Date().toISOString(),
+  };
+  localStore.audit_log.unshift(entry);
+  if (localStore.audit_log.length > 500) localStore.audit_log.pop();
+
+  if (isSupabaseConfigured()) {
+    try {
+      await getSupabase()!.from('audit_log').insert({
+        event_type: entry.event_type,
+        actor: entry.actor,
+        details: entry.details,
+        created_at: entry.created_at,
+      });
+    } catch (err) {
+      console.warn('[AuditLog] Supabase write failed, stored locally only:', err);
+    }
+  }
+}
+
+export { writeAuditLog };
+
 export const authRouter = Router();
 
 // Demo users with roles
@@ -118,13 +146,11 @@ authRouter.post('/login', async (req: Request, res: Response) => {
     const sessionToken = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     activeSessions.set(sessionToken, userProfile);
 
-    // Record login in audit log
-    localStore.audit_log.unshift({
-      id: `audit-${Date.now()}`,
-      event_type: 'USER_LOGIN',
-      actor: userProfile.email,
-      details: { role: userProfile.role, timestamp: new Date().toISOString() },
-      created_at: new Date().toISOString()
+    // Record login in audit log (local + Supabase)
+    await writeAuditLog('USER_LOGIN', userProfile.email, {
+      role: userProfile.role,
+      department: userProfile.department,
+      timestamp: new Date().toISOString(),
     });
 
     return res.json({
@@ -173,6 +199,13 @@ authRouter.post('/register', async (req: Request, res: Response) => {
       color: '#2563eb'
     };
     activeSessions.set(sessionToken, userProfile);
+
+    // Write register event to audit_log (local + Supabase)
+    await writeAuditLog('USER_REGISTER', userProfile.email, {
+      role: userProfile.role,
+      department: userProfile.department,
+      timestamp: new Date().toISOString(),
+    });
 
     return res.status(201).json({
       status: 'ok',

@@ -143,7 +143,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
     });
   }, [vehicles, closedStops, searchOrigin, searchDest, result.used]);
 
-  const handleAcceptAlternative = (vehicleId: string, stop?: string) => {
+  const handleAcceptAlternative = async (vehicleId: string, stop?: string) => {
     if (!selectedParty) return;
 
     const newOverrides = {
@@ -152,6 +152,22 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
     };
 
     setManualOverrides(newOverrides);
+
+    // Persist to backend → Supabase audit_log + parties table
+    try {
+      await fetch('/api/network/place', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          partyId: selectedParty.id,
+          vehicleId,
+          stop: stop || null,
+          actor: currentUser?.email || selectedParty.id,
+        }),
+      });
+    } catch {
+      // Non-critical — local state already updated above
+    }
 
     const ruleWeights: Record<string, number> = {};
     for (const r of rules) {
