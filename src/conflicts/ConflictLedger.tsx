@@ -41,9 +41,9 @@ export function ConflictLedger() {
       {/* Calm Header */}
       <div className="conflict-header-minimal">
         <div>
-          <h2 className="conflict-title">Truth Arbitration Ledger</h2>
+          <h2 className="conflict-title">Truth & Report Verification</h2>
           <span className="conflict-subtitle">
-            Resolves conflicting reports without blindly trusting the newest arrival (Anti-LWW)
+            Resolves conflicting station reports by checking real-time sensors and report age rather than blindly trusting the newest message
           </span>
         </div>
 

@@ -315,14 +315,14 @@ export function App() {
             className={`op-nav-tab ${operatorTab === 'telemetry' ? 'active' : ''}`}
             onClick={() => setOperatorTab('telemetry')}
           >
-            📡 Telemetry Ingestion (C-1)
+            📡 Live Sensor Feeds
           </button>
           <button
             type="button"
             className={`op-nav-tab ${operatorTab === 'conflicts' ? 'active' : ''}`}
             onClick={() => setOperatorTab('conflicts')}
           >
-            ⚖️ Conflict Ledger (C-2)
+            ⚖️ Report Verification
           </button>
           <button
             type="button"
