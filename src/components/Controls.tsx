@@ -218,8 +218,9 @@ export const Controls: React.FC<ControlsProps> = ({
               <div key={r.key} className="rule-slider-row">
                 <div className="rule-slider-header">
                   <span className="rule-name">{r.label}</span>
-                  <span className="rule-weight-value">{r.weight}</span>
+                  <span className="rule-weight-value">{r.weight} pt</span>
                 </div>
+                {r.description && <p className="rule-desc">{r.description}</p>}
                 <Slider.Root
                   className="slider-root"
                   value={[r.weight]}
