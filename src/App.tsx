@@ -243,13 +243,13 @@ export function App() {
         <div className="op-top-bar">
           <div className="op-terminal-tag">
             <span className="station-dot" />
-            <span>DISRUPTION MANAGEMENT TERMINAL</span>
+            <span>STRANDED NETWORK</span>
             <button
               type="button"
               className="op-home-link"
               onClick={() => setView('landing')}
             >
-              ← LANDING
+              Workspace
             </button>
           </div>
 
@@ -282,7 +282,7 @@ export function App() {
               className="op-action-btn"
               onClick={() => setView('passenger')}
             >
-              📱 Passenger App
+              Passenger portal
             </button>
           </div>
         </div>
@@ -294,42 +294,42 @@ export function App() {
             className={`op-nav-tab ${operatorTab === 'overview' ? 'active' : ''}`}
             onClick={() => setOperatorTab('overview')}
           >
-            Overview & Fleet
+            Overview
           </button>
           <button
             type="button"
             className={`op-nav-tab ${operatorTab === 'roster' ? 'active' : ''}`}
             onClick={() => setOperatorTab('roster')}
           >
-            Passenger Roster ({parties.length})
+            Passenger roster ({parties.length})
           </button>
           <button
             type="button"
             className={`op-nav-tab ${operatorTab === 'corridors' ? 'active' : ''}`}
             onClick={() => setOperatorTab('corridors')}
           >
-            Corridor Demand
+            Corridor demand
           </button>
           <button
             type="button"
             className={`op-nav-tab ${operatorTab === 'telemetry' ? 'active' : ''}`}
             onClick={() => setOperatorTab('telemetry')}
           >
-            📡 Live Sensor Feeds
+            Live sensors
           </button>
           <button
             type="button"
             className={`op-nav-tab ${operatorTab === 'conflicts' ? 'active' : ''}`}
             onClick={() => setOperatorTab('conflicts')}
           >
-            ⚖️ Report Verification
+            Report verification
           </button>
           <button
             type="button"
             className={`op-nav-tab ${operatorTab === 'all' ? 'active' : ''}`}
             onClick={() => setOperatorTab('all')}
           >
-            Full Timetable View
+            Full timetable
           </button>
         </nav>
 
