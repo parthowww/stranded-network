@@ -200,7 +200,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
         <header className="customer-top-bar">
           <div className="customer-status-pill">
             <span className={`sync-dot ${liveConnected ? 'active' : ''}`} />
-            <span>Station Dispatch Live</span>
+            <span>Live network updates</span>
           </div>
 
           {onBackToOperator && (
@@ -209,7 +209,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
               className="operator-nav-back"
               onClick={onBackToOperator}
             >
-              Operator View ↗
+              Operator view
             </button>
           )}
           <button
@@ -217,7 +217,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
             className="cust-signout-btn"
             onClick={() => { authStore.logout(); setCurrentUser(null); }}
           >
-            {currentUser.name.split(' ')[0]} · SIGN OUT
+            {currentUser.name.split(' ')[0]} · Sign out
           </button>
         </header>
 
@@ -228,14 +228,14 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
             className={`customer-mode-btn ${viewMode === 'my-ticket' ? 'active' : ''}`}
             onClick={() => setViewMode('my-ticket')}
           >
-            My Boarding Pass
+            My boarding pass
           </button>
           <button
             type="button"
             className={`customer-mode-btn ${viewMode === 'search-route' ? 'active' : ''}`}
             onClick={() => setViewMode('search-route')}
           >
-            🔍 Search Route & Destination
+            Find a route
           </button>
         </div>
 
@@ -247,7 +247,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
             {/* Passenger Identification & Switcher */}
             <div className="customer-identity-bar">
               <div className="identity-text">
-                <span className="identity-sub">Passenger Ticket Reference</span>
+                <span className="identity-sub">Booking reference</span>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                   <strong>{selectedParty.label}</strong>
                   <span className="num">({selectedParty.id})</span>
@@ -266,12 +266,12 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                 /* Boarding pass */
                 <div className="clean-boarding-card">
                   <div className="boarding-card-head">
-                    <span className="badge-confirmed">CONFIRMED BOARDING PASS</span>
+                    <span className="badge-confirmed">Boarding confirmed</span>
                     <span className="num badge-eta">ETA T+{placement.arrival}m</span>
                   </div>
 
                   <div className="boarding-card-hero">
-                    <span className="hero-service-label">Your Replacement Service</span>
+                    <span className="hero-service-label">Assigned service</span>
                     <h2 className="hero-service-title">{placement.vehicleName}</h2>
                     <div className="hero-service-route">
                       From {placement.origin} to <strong>{placement.destination}</strong>
@@ -286,16 +286,14 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                     <div className="card-metric">
                       <span className="metric-label">BOARDING ACCESS</span>
                       <span className="metric-val">
-                        {selectedParty.wheelchair ? '♿ Step-Free Confirmed' : 'Standard Coach'}
+                        {selectedParty.wheelchair ? 'Step-free confirmed' : 'Standard boarding'}
                       </span>
                     </div>
                   </div>
 
                   <div className="boarding-instructions-box">
-                    <div className="boarding-barcode">|| | |||| | ||| || |||| | || | ||| ||</div>
                     <p>
-                      Please proceed to <strong>{placement.origin}</strong> bus concourse / bay.
-                      Present this boarding card to the station marshal.
+                      Board at <strong>{placement.origin}</strong>. Show your booking reference to the station team.
                     </p>
                   </div>
                 </div>
@@ -362,7 +360,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                 style={{ textAlign: 'center', marginTop: '8px' }}
                 onClick={() => setViewMode('search-route')}
               >
-                🔍 Looking for a different destination or booking? Search here →
+                Looking for another journey? <span>Search routes</span>
               </button>
             </main>
           </>
@@ -374,11 +372,11 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
         {viewMode === 'search-route' && (
           <div className="customer-route-search-view">
             <div className="route-search-box">
-              <span className="route-box-title">Find Disrupted Route</span>
+              <span className="route-box-title">Find a journey</span>
 
               <div className="route-select-row">
                 <div className="route-select-field">
-                  <label>Origin Location (Where are you?):</label>
+                    <label>Starting station</label>
                   <select
                     value={searchOrigin}
                     onChange={(e) => setSearchOrigin(e.target.value)}
@@ -392,7 +390,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                 </div>
 
                 <div className="route-select-field">
-                  <label>Destination (Where are you going?):</label>
+                    <label>Destination</label>
                   <select
                     value={searchDest}
                     onChange={(e) => setSearchDest(e.target.value)}
@@ -407,7 +405,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
               </div>
 
               <div className="route-search-filter">
-                <label>Filter by Passenger Name or Ref (Optional):</label>
+                <label>Booking reference or passenger</label>
                 <input
                   type="text"
                   placeholder="e.g. Sundaram, P-001..."
@@ -430,7 +428,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
 
               {/* Status of replacement services on this corridor */}
               <div className="corridor-services-card">
-                <span className="service-card-title">Services Serving this Corridor:</span>
+                <span className="service-card-title">Available services</span>
                 {corridorVehicles.filter((cv) => cv.serves).length > 0 ? (
                   corridorVehicles
                     .filter((cv) => cv.serves)
@@ -457,7 +455,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
 
               {/* Parties booked on this corridor */}
               <div className="corridor-parties-list">
-                <span className="service-card-title">Booked Passengers on this Route (Tap to View):</span>
+              <span className="service-card-title">Passengers on this route</span>
                 {corridorParties.length > 0 ? (
                   corridorParties.map((p) => {
                     const isPlaced = result.placements[p.id] !== undefined;
@@ -508,7 +506,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
             className="collapsible-toggle-btn"
             onClick={() => setShowNetworkInfo(!showNetworkInfo)}
           >
-            <span>{showNetworkInfo ? '▲ Hide' : '▼ View'} Full Station Fleet Status ({vehicles.length} vehicles)</span>
+            <span>{showNetworkInfo ? 'Hide' : 'View'} network service status ({vehicles.length})</span>
           </button>
 
           {showNetworkInfo && (
